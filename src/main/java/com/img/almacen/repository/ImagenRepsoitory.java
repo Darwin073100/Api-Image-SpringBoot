@@ -3,12 +3,16 @@ package com.img.almacen.repository;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 @Repository
 public interface ImagenRepsoitory {
 
-    boolean upLoadImg(int idImg, MultipartFile imagen);
+    boolean exist(String name);
+    boolean upLoadImg(int idImg, MultipartFile image);
 
-    byte[] getImg(int idImg);
+    byte[] getImg(String name);
 
-    boolean deleteImg(int idImg);
+    boolean deleteImg(String name);
 }
