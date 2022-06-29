@@ -1,6 +1,6 @@
 package com.img.almacen.service;
 
-import com.img.almacen.repository.ImagenRepsoitory;
+import com.img.almacen.repository.ImageRepsoitory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,25 +13,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
-public class ImagenService implements ImagenRepsoitory {
+public class ImageService implements ImageRepsoitory {
 
     private final String PATH_NUBE = "NUBE/IMAGENES/";
-
-    /**
-     * @param name
-     * @return
-     */
-    @Override
-    public boolean exist(String name) {
-        File file = new File(name);
-        if (file.exists()){
-            return true;
-        }else {
-            return false;
-        }
-    }
 
     /**
      * @param idImg
@@ -39,18 +26,17 @@ public class ImagenService implements ImagenRepsoitory {
      * @return
      */
     @Override
-    public boolean upLoadImg(int idImg, MultipartFile image){
+    public byte[] upLoadImg(int idImg, MultipartFile image){
         LocalDate fecha = LocalDate.now();
-        String fileName = idImg + "-IMG-"+ fecha + image.getContentType().split("/")[1];
+        String fileName = idImg + "-IMG-"+ fecha +"."+ image.getContentType().split("/")[1];
         try {
             Files.copy(image.getInputStream(), Paths.get(PATH_NUBE + fileName), StandardCopyOption.REPLACE_EXISTING);
+            byte[] bytes = image.getBytes();
+            Path path = Paths.get(PATH_NUBE+fileName);
+            Files.write(path, bytes);
+            return bytes;
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-        if (exist(fileName)) {
-            return true;
-        }else {
-            return false;
         }
     }
 
@@ -60,22 +46,15 @@ public class ImagenService implements ImagenRepsoitory {
      */
     @Override
     public byte[] getImg(String name){
-        if (exist(name)){
-            File file = new File(name);
             try {
-                FileInputStream inputStream = new FileInputStream(file);
-                byte[] bytes = new byte[inputStream.available()];
-                inputStream.read(bytes, 0, inputStream.available());
-                return bytes;
+                Path path = Paths.get(PATH_NUBE+name);
+                byte[] image = Files.readAllBytes(path);
+                return image;
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -84,8 +63,8 @@ public class ImagenService implements ImagenRepsoitory {
      */
     @Override
     public boolean deleteImg(String name) {
-        if (exist(name)){
-            File file = new File(name);
+        File file = new File(PATH_NUBE + name);
+        if (file.exists()){
             file.delete();
             return true;
         }else {
